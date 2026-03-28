@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Clock - Multiple Time Zones</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .controls-section {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .format-toggle {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .format-btn {
+            padding: 10px 25px;
+            border: 2px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .format-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .format-btn:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .timezone-selector {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .timezone-selector select {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            background: white;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #667eea;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .clocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .clock-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .clock-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .clock-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+        }
+
+        .timezone-name {
+            font-size: 22px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            margin-top: 5px;
+        }
+
+        .country-name {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        .clock-display {
+            font-size: 56px;
+            font-weight: 300;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .date-display {
+            font-size: 13px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .utc-offset {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .remove-btn {
+            width: 100%;
+            margin-top: 15px;
+            font-size: 12px;
+            padding: 8px !important;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: white;
+        }
+
+        .empty-state h2 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 36px;
+            }
+
+            .clock-display {
+                font-size: 44px;
+                letter-spacing: 2px;
+            }
+
+            .clocks-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .timezone-selector {
+                flex-direction: column;
+            }
+
+            .timezone-selector select {
+                width: 100%;
+            }
+
+            .controls-section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 World Clock</h1>
+            <p>Current time across different time zones</p>
+        </div>
+
+        <div class="controls-section">
+            <div class="format-toggle">
+                <button class="format-btn active" onclick="setFormat('12')">12-Hour Format</button>
+                <button class="format-btn" onclick="setFormat('24')">24-Hour Format</button>
+            </div>
+
+            <div class="timezone-selector">
+                <select id="timezoneSelect" onchange="addSelectedTimezone()">
+                    <option value="">-- Select a Time Zone --</option>
+                    <optgroup label="Recommended (Pre-selected)">
+                        <option value="Europe/Berlin|Bochum, Germany">Bochum, Germany</option>
+                        <option value="Europe/London|London, UK">London, UK</option>
+                        <option value="Europe/London|Liverpool, UK">Liverpool, UK</option>
+                        <option value="America/New_York|New York, USA">New York, USA</option>
+                        <option value="America/Toronto|Toronto, Canada">Toronto, Canada</option>
+                        <option value="Asia/Dhaka|Dhaka, Bangladesh">Dhaka, Bangladesh</option>
+                        <option value="Asia/Riyadh|Riyadh, Saudi Arabia">Riyadh, Saudi Arabia</option>
+                        <option value="Asia/Dubai|Dubai, UAE">Dubai, UAE</option>
+                    </optgroup>
+                    <optgroup label="Europe">
+                        <option value="Europe/Berlin|Berlin, Germany">Berlin, Germany</option>
+                        <option value="Europe/Paris|Paris, France">Paris, France</option>
+                        <option value="Europe/Madrid|Madrid, Spain">Madrid, Spain</option>
+                        <option value="Europe/Rome|Rome, Italy">Rome, Italy</option>
+                        <option value="Europe/Amsterdam|Amsterdam, Netherlands">Amsterdam, Netherlands</option>
+                        <option value="Europe/Brussels|Brussels, Belgium">Brussels, Belgium</option>
+                        <option value="Europe/Vienna|Vienna, Austria">Vienna, Austria</option>
+                        <option value="Europe/Prague|Prague, Czech Republic">Prague, Czech Republic</option>
+                        <option value="Europe/Warsaw|Warsaw, Poland">Warsaw, Poland</option>
+                        <option value="Europe/Moscow|Moscow, Russia">Moscow, Russia</option>
+                        <option value="Europe/Istanbul|Istanbul, Turkey">Istanbul, Turkey</option>
+                        <option value="Europe/Athens|Athens, Greece">Athens, Greece</option>
+                        <option value="Europe/Lisbon|Lisbon, Portugal">Lisbon, Portugal</option>
+                        <option value="Europe/Stockholm|Stockholm, Sweden">Stockholm, Sweden</option>
+                        <option value="Europe/Helsinki|Helsinki, Finland">Helsinki, Finland</option>
+                    </optgroup>
+                    <optgroup label="Asia">
+                        <option value="Asia/Tokyo|Tokyo, Japan">Tokyo, Japan</option>
+                        <option value="Asia/Shanghai|Shanghai, China">Shanghai, China</option>
+                        <option value="Asia/Hong_Kong|Hong Kong">Hong Kong</option>
+                        <option value="Asia/Bangkok|Bangkok, Thailand">Bangkok, Thailand</option>
+                        <option value="Asia/Singapore|Singapore">Singapore</option>
+                        <option value="Asia/Kolkata|New Delhi, India">New Delhi, India</option>
+                        <option value="Asia/Karachi|Karachi, Pakistan">Karachi, Pakistan</option>
+                        <option value="Asia/Seoul|Seoul, South Korea">Seoul, South Korea</option>
+                        <option value="Asia/Manila|Manila, Philippines">Manila, Philippines</option>
+                        <option value="Asia/Jakarta|Jakarta, Indonesia">Jakarta, Indonesia</option>
+                        <option value="Asia/Taipei|Taipei, Taiwan">Taipei, Taiwan</option>
+                        <option value="Asia/Phnom_Penh|Phnom Penh, Cambodia">Phnom Penh, Cambodia</option>
+                        <option value="Asia/Ho_Chi_Minh|Ho Chi Minh, Vietnam">Ho Chi Minh, Vietnam</option>
+                        <option value="Asia/Yangon|Yangon, Myanmar">Yangon, Myanmar</option>
+                    </optgroup>
+                    <optgroup label="Americas">
+                        <option value="America/Chicago|Chicago, USA">Chicago, USA</option>
+                        <option value="America/Denver|Denver, USA">Denver, USA</option>
+                        <option value="America/Los_Angeles|Los Angeles, USA">Los Angeles, USA</option>
+                        <option value="America/Mexico_City|Mexico City, Mexico">Mexico City, Mexico</option>
+                        <option value="America/Winnipeg|Winnipeg, Canada">Winnipeg, Canada</option>
+                        <option value="America/Vancouver|Vancouver, Canada">Vancouver, Canada</option>
+                        <option value="America/Bogota|Bogota, Colombia">Bogota, Colombia</option>
+                        <option value="America/Lima|Lima, Peru">Lima, Peru</option>
+                        <option value="America/Sao_Paulo|São Paulo, Brazil">São Paulo, Brazil</option>
+                        <option value="America/Buenos_Aires|Buenos Aires, Argentina">Buenos Aires, Argentina</option>
+                        <option value="America/Toronto|Toronto, Canada">Toronto, Canada</option>
+                    </optgroup>
+                    <optgroup label="Middle East">
+                        <option value="Asia/Jerusalem|Jerusalem, Israel">Jerusalem, Israel</option>
+                        <option value="Asia/Tehran|Tehran, Iran">Tehran, Iran</option>
+                        <option value="Asia/Baghdad|Baghdad, Iraq">Baghdad, Iraq</option>
+                        <option value="Asia/Beirut|Beirut, Lebanon">Beirut, Lebanon</option>
+                        <option value="Asia/Amman|Amman, Jordan">Amman, Jordan</option>
+                        <option value="Asia/Kuwait|Kuwait City, Kuwait">Kuwait City, Kuwait</option>
+                        <option value="Asia/Qatar|Doha, Qatar">Doha, Qatar</option>
+                        <option value="Asia/Muscat|Muscat, Oman">Muscat, Oman</option>
+                    </optgroup>
+                    <optgroup label="Africa">
+                        <option value="Africa/Cairo|Cairo, Egypt">Cairo, Egypt</option>
+                        <option value="Africa/Lagos|Lagos, Nigeria">Lagos, Nigeria</option>
+                        <option value="Africa/Johannesburg|Johannesburg, South Africa">Johannesburg, South Africa</option>
+                        <option value="Africa/Nairobi|Nairobi, Kenya">Nairobi, Kenya</option>
+                        <option value="Africa/Casablanca|Casablanca, Morocco">Casablanca, Morocco</option>
+                        <option value="Africa/Addis_Ababa|Addis Ababa, Ethiopia">Addis Ababa, Ethiopia</option>
+                    </optgroup>
+                    <optgroup label="Pacific/Oceania">
+                        <option value="Australia/Sydney|Sydney, Australia">Sydney, Australia</option>
+                        <option value="Australia/Melbourne|Melbourne, Australia">Melbourne, Australia</option>
+                        <option value="Australia/Brisbane|Brisbane, Australia">Brisbane, Australia</option>
+                        <option value="Pacific/Auckland|Auckland, New Zealand">Auckland, New Zealand</option>
+                        <option value="Pacific/Fiji|Fiji">Fiji</option>
+                        <option value="Pacific/Honolulu|Honolulu, USA">Honolulu, USA</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" onclick="addSelectedTimezone()">+ Add Selected Zone</button>
+                <button class="btn btn-danger" onclick="resetToDefault()">Reset to Defaults</button>
+            </div>
+        </div>
+
+        <div class="clocks-grid" id="clocks-container">
+            <!-- Clocks will be generated here -->
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_TIMEZONES = [
+            { name: 'Bochum', country: 'Germany', timezone: 'Europe/Berlin' },
+            { name: 'London', country: 'UK', timezone: 'Europe/London' },
+            { name: 'Liverpool', country: 'UK', timezone: 'Europe/London' },
+            { name: 'New York', country: 'USA', timezone: 'America/New_York' },
+            { name: 'Toronto', country: 'Canada', timezone: 'America/Toronto' },
+            { name: 'Dhaka', country: 'Bangladesh', timezone: 'Asia/Dhaka' },
+            { name: 'Riyadh', country: 'Saudi Arabia', timezone: 'Asia/Riyadh' },
+            { name: 'Dubai', country: 'UAE', timezone: 'Asia/Dubai' }
+        ];
+
+        let currentTimezones = [...DEFAULT_TIMEZONES];
+        let timeFormat = '12';
+
+        function setFormat(format) {
+            timeFormat = format;
+            document.querySelectorAll('.format-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            updateClocks();
+        }
+
+        function formatTime(date, is24Hour) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            if (is24Hour) {
+                return `${hours}:${minutes}:${seconds}`;
+            } else {
+                let displayHours = date.getHours() % 12 || 12;
+                const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
+                return `${String(displayHours).padStart(2, '0')}:${minutes}:${seconds} ${ampm}`;
+            }
+        }
+
+        function getUTCOffset(timezone) {
+            const now = new Date();
+            const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+            const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+            const diff = (tzDate - utcDate) / (1000 * 60 * 60);
+
+            const sign = diff >= 0 ? '+' : '';
+            const hours = Math.floor(Math.abs(diff));
+            const minutes = Math.round((Math.abs(diff) - hours) * 60);
+
+            return `UTC ${sign}${hours}:${String(minutes).padStart(2, '0')}`;
+        }
+
+        function updateClocks() {
+            const container = document.getElementById('clocks-container');
+            
+            if (currentTimezones.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <h2>No Time Zones Selected</h2>
+                        <p>Add time zones using the selector above to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+
+            currentTimezones.forEach((tz, index) => {
+                const now = new Date();
+                const tzDate = new Date(now.toLocaleString('en-US', { timeZone: tz.timezone }));
+                const timeString = formatTime(tzDate, timeFormat === '24');
+                const dateString = tzDate.toLocaleDateString('en-US', { 
+                    weekday: 'short', 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                });
+                const offset = getUTCOffset(tz.timezone);
+
+                const card = document.createElement('div');
+                card.className = 'clock-card';
+                card.innerHTML = `
+                    <div class="timezone-name">${tz.name}</div>
+                    <div class="country-name">${tz.country}</div>
+                    <div class="clock-display">${timeString}</div>
+                    <div class="date-display">${dateString}</div>
+                    <div class="utc-offset">${offset}</div>
+                    <button class="btn btn-danger remove-btn" onclick="removeTimezone(${index})">Remove</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addSelectedTimezone() {
+            const select = document.getElementById('timezoneSelect');
+            const value = select.value;
+
+            if (!value) {
+                alert('Please select a time zone');
+                return;
+            }
+
+            const [timezone, display] = value.split('|');
+            const [name, country] = display.split(', ');
+
+            // Check if already added
+            if (currentTimezones.some(tz => tz.timezone === timezone && tz.name === name)) {
+                alert('This time zone is already added!');
+                select.value = '';
+                return;
+            }
+
+            currentTimezones.push({ name, country, timezone });
+            select.value = '';
+            updateClocks();
+        }
+
+        function removeTimezone(index) {
+            currentTimezones.splice(index, 1);
+            updateClocks();
+        }
+
+        function resetToDefault() {
+            currentTimezones = [...DEFAULT_TIMEZONES];
+            updateClocks();
+        }
+
+        // Update clocks every second
+        setInterval(updateClocks, 1000);
+
+        // Initial render
+        updateClocks();
+    </script>
+</body>
+</html>
